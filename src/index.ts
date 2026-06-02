@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import productRoutes from './routes/productRoutes';
 import categoryRoutes from './routes/categoryRoutes';
+import settingsRoutes from './routes/settingsRoutes';
+import subscriberRoutes from './routes/subscriberRoutes';
 
 dotenv.config();
 
@@ -28,6 +30,8 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/subscribers', subscriberRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

@@ -10,6 +10,8 @@ router.get('/', async (_req: Request, res: Response) => {
       include: {
         category: true,
         variants: true,
+        reviews: true,
+        images: { orderBy: { order: 'asc' } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -34,6 +36,8 @@ router.get('/:id', async (req: Request, res: Response) => {
       include: {
         category: true,
         variants: true,
+        reviews: true,
+        images: { orderBy: { order: 'asc' } },
       },
     });
 
@@ -52,7 +56,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 // POST /api/products — Create a new product with variants
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, description, price, image, rating, reviewCount, categoryId, variants } = req.body;
+    const { name, description, price, image, images, categoryId, variants, reviews } = req.body;
 
     if (!name || price === undefined || !categoryId) {
       res.status(400).json({ error: 'Name, price, and categoryId are required' });
@@ -65,8 +69,6 @@ router.post('/', async (req: Request, res: Response) => {
         description: description || null,
         price: Number(price),
         image: image || null,
-        rating: rating !== undefined ? Number(rating) : 4.5,
-        reviewCount: reviewCount !== undefined ? Number(reviewCount) : 0,
         categoryId: Number(categoryId),
         variants: variants
           ? {
@@ -78,10 +80,30 @@ router.post('/', async (req: Request, res: Response) => {
               })),
             }
           : undefined,
+        reviews: reviews
+          ? {
+              create: reviews.map((r: { reviewerName: string; reviewerPhoto?: string; description?: string; rating?: number }) => ({
+                reviewerName: r.reviewerName,
+                reviewerPhoto: r.reviewerPhoto || null,
+                description: r.description || null,
+                rating: r.rating ?? 5,
+              })),
+            }
+          : undefined,
+        images: images
+          ? {
+              create: images.map((img: string, idx: number) => ({
+                imageData: img,
+                order: idx,
+              })),
+            }
+          : undefined,
       },
       include: {
         category: true,
         variants: true,
+        reviews: true,
+        images: true,
       },
     });
 
@@ -104,7 +126,7 @@ router.put('/:id', async (req: Request, res: Response) => {
       return;
     }
 
-    const { name, description, price, image, categoryId, variants } = req.body;
+    const { name, description, price, image, images, categoryId, variants, reviews } = req.body;
 
     // Update the product details
     await prisma.product.update({
@@ -134,11 +156,43 @@ router.put('/:id', async (req: Request, res: Response) => {
       }
     }
 
+    // If reviews are provided, replace them
+    if (reviews) {
+      await prisma.review.deleteMany({ where: { productId: id } });
+      for (const r of reviews) {
+        await prisma.review.create({
+          data: {
+            productId: id,
+            reviewerName: r.reviewerName || 'Anonymous',
+            reviewerPhoto: r.reviewerPhoto || null,
+            description: r.description || null,
+            rating: r.rating ?? 5,
+          },
+        });
+      }
+    }
+
+    // If images are provided, replace them
+    if (images) {
+      await prisma.productImage.deleteMany({ where: { productId: id } });
+      for (const [idx, img] of images.entries()) {
+        await prisma.productImage.create({
+          data: {
+            productId: id,
+            imageData: img,
+            order: idx,
+          },
+        });
+      }
+    }
+
     const updatedProduct = await prisma.product.findUnique({
       where: { id },
       include: {
         category: true,
         variants: true,
+        reviews: true,
+        images: { orderBy: { order: 'asc' } },
       },
     });
 

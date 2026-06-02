@@ -30,17 +30,27 @@ model Category {
   @@map("categories")
 }
 
+model ProductImage {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  imageData String   @db.LongText
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  @@map("product_images")
+}
+
 model Product {
   id          Int       @id @default(autoincrement())
   name        String
   description String?   @db.Text
   price       Float
   image       String?   @db.LongText
-  rating      Float     @default(4.5)
-  reviewCount Int       @default(0)
   categoryId  Int
   category    Category  @relation(fields: [categoryId], references: [id])
   variants    ProductVariant[]
+  reviews     Review[]
+  images      ProductImage[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   @@map("products")
@@ -56,6 +66,18 @@ model ProductVariant {
   stock       Int       @default(0)
   orderItems  OrderItem[]
   @@map("product_variants")
+}
+
+model Review {
+  id            Int      @id @default(autoincrement())
+  productId     Int
+  product       Product  @relation(fields: [productId], references: [id])
+  reviewerName  String
+  reviewerPhoto String?  @db.LongText
+  description   String?  @db.Text
+  rating        Int      @default(5)
+  createdAt     DateTime @default(now())
+  @@map("reviews")
 }
 
 enum OrderStatus {
@@ -74,6 +96,20 @@ model Order {
   items         OrderItem[]
   createdAt     DateTime      @default(now())
   @@map("orders")
+}
+
+model Subscriber {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  subscribedAt  DateTime @default(now())
+  @@map("subscribers")
+}
+
+model StorefrontSetting {
+  key       String   @id
+  value     String   @db.LongText
+  updatedAt DateTime @updatedAt
+  @@map("storefront_settings")
 }
 
 model OrderItem {
