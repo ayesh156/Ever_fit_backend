@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
 import { prisma } from '../lib/prisma';
+import { getIO } from '../lib/socket';
 
 const router = Router();
 
@@ -117,32 +118,31 @@ router.post('/', async (req: Request, res: Response) => {
     const status: any = paid > 0 ? 'PAID' : 'PENDING';
 
     // Auto-create or find customer by phone if customerId not provided
-    let userId: number | null = null;
+    let customerIdNum: number | null = null;
     if (customerId) {
-      userId = Number(customerId);
+      customerIdNum = Number(customerId);
     } else if (customerPhone && customerPhone.trim() && customerName && customerName !== 'Walk-in Customer') {
       // Try to find existing customer by phone
-      const existing = await prisma.user.findFirst({
-        where: { phone: customerPhone.trim(), role: 'CUSTOMER' },
+      const existing = await prisma.customer.findUnique({
+        where: { phone: customerPhone.trim() },
       });
       if (existing) {
-        userId = existing.id;
+        customerIdNum = existing.id;
       } else {
         // Create new customer
-        const newCustomer = await prisma.user.create({
+        const newCustomer = await prisma.customer.create({
           data: {
             name: customerName,
             phone: customerPhone.trim(),
-            role: 'CUSTOMER',
           },
         });
-        userId = newCustomer.id;
+        customerIdNum = newCustomer.id;
       }
     }
 
     const order = await prisma.order.create({
       data: {
-        userId,
+        customerId: customerIdNum,
         customerName: customerName || 'Walk-in Customer',
         customerPhone: customerPhone || null,
         totalAmount: total,
@@ -167,6 +167,10 @@ router.post('/', async (req: Request, res: Response) => {
         payments: true,
       },
     });
+
+    // Emit real-time event so admin dashboard and any connected client receive the
+    // fully-hydrated order object (including items) immediately — no page refresh needed.
+    getIO().emit('newOrder', order);
 
     res.status(201).json(order);
   } catch (error) {
@@ -200,6 +204,10 @@ router.post('/:id/upload-receipt', upload.single('receipt'), async (req: Request
         payments: true,
       },
     });
+
+    // Notify all connected clients that this order's status changed to PAYMENT_REVIEW
+    getIO().emit('orderUpdated', updatedOrder);
+    getIO().emit('orderStatusUpdated', { orderId: id, status: updatedOrder.status });
 
     res.json(updatedOrder);
   } catch (error) {
@@ -272,6 +280,11 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
       },
     });
 
+    // Emit both events so admin dashboard (orderUpdated) and storefront
+    // TrackOrder page (orderStatusUpdated) both update in real-time.
+    getIO().emit('orderUpdated', updatedOrder);
+    getIO().emit('orderStatusUpdated', { orderId: id, status: updatedOrder.status });
+
     res.json(updatedOrder);
   } catch (error) {
     console.error('[updateOrderStatus] error:', error);
@@ -313,6 +326,10 @@ router.patch('/:id', async (req: Request, res: Response) => {
         payments: true,
       },
     });
+
+    // Emit real-time update for any field change (status, payment, customer info, etc.)
+    getIO().emit('orderUpdated', updatedOrder);
+    getIO().emit('orderStatusUpdated', { orderId: id, status: updatedOrder.status });
 
     res.json(updatedOrder);
   } catch (error) {

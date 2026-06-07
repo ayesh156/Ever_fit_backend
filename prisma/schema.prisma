@@ -9,7 +9,6 @@ datasource db {
 enum Role {
   ADMIN
   STAFF
-  CUSTOMER
 }
 
 model User {
@@ -17,24 +16,43 @@ model User {
   name      String
   email     String?  @unique
   phone     String?
-  role      Role     @default(CUSTOMER)
-  orders    Order[]
+  role      Role     @default(STAFF)
   createdAt DateTime @default(now())
   @@map("users")
 }
 
+model Customer {
+  id                Int      @id @default(autoincrement())
+  name              String
+  phone             String   @unique
+  email             String?
+  address           String?
+  city              String?
+  photoUrl          String?
+  outstandingBalance Float   @default(0)
+  notes             String?  @db.Text
+  nic               String?
+  orders            Order[]
+  createdAt         DateTime @default(now())
+  @@map("customers")
+}
+
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  products  Product[]
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  slug        String
+  description String?
+  image       String?   @db.LongText
+  status      String    @default("active")
+  products    Product[]
   @@map("categories")
 }
 
 model ProductImage {
   id        Int      @id @default(autoincrement())
   productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  imageData String   @db.LongText
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  imageUrl  String?  @db.LongText
   order     Int      @default(0)
   createdAt DateTime @default(now())
   @@map("product_images")
@@ -45,7 +63,6 @@ model Product {
   name        String
   description String?   @db.Text
   price       Float
-  image       String?   @db.LongText
   categoryId  Int
   category    Category  @relation(fields: [categoryId], references: [id])
   variants    ProductVariant[]
@@ -59,7 +76,7 @@ model Product {
 model ProductVariant {
   id          Int       @id @default(autoincrement())
   productId   Int
-  product     Product   @relation(fields: [productId], references: [id])
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   size        String
   color       String
   sku         String    @unique
@@ -71,7 +88,7 @@ model ProductVariant {
 model Review {
   id            Int      @id @default(autoincrement())
   productId     Int
-  product       Product  @relation(fields: [productId], references: [id])
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   reviewerName  String
   reviewerPhoto String?  @db.LongText
   description   String?  @db.Text
@@ -84,12 +101,18 @@ enum OrderStatus {
   PENDING
   PAID
   CANCELLED
+  PENDING_RECEIPT
+  PAYMENT_REVIEW
+  PAYMENT_VERIFIED
+  PROCESSING
+  SHIPPED
+  DELIVERED
 }
 
 model Order {
   id                Int           @id @default(autoincrement())
-  userId            Int?
-  user              User?         @relation(fields: [userId], references: [id])
+  customerId        Int?
+  customer          Customer?     @relation(fields: [customerId], references: [id])
   customerName      String?
   customerPhone     String?
   totalAmount       Float
@@ -116,6 +139,12 @@ model OrderPayment {
   reference String?
   createdAt DateTime @default(now())
   @@map("order_payments")
+}
+
+model City {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  @@map("cities")
 }
 
 model Subscriber {

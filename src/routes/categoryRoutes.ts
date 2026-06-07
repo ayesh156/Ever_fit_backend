@@ -7,6 +7,7 @@ const router = Router();
 router.get('/', async (_req: Request, res: Response) => {
   try {
     const categories = await prisma.category.findMany({
+      include: { _count: { select: { products: true } } },
       orderBy: { id: 'asc' },
     });
     res.json(categories);

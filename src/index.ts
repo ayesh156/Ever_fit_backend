@@ -80,6 +80,7 @@ import settingsRoutes from './routes/settingsRoutes';
 import subscriberRoutes from './routes/subscriberRoutes';
 import orderRoutes from './routes/orderRoutes';
 import customerRoutes from './routes/customerRoutes';
+import cityRoutes from './routes/cityRoutes';
 
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -87,10 +88,13 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/subscribers', subscriberRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/cities', cityRoutes);
 
 // Socket.IO for real-time updates
-import { Server } from 'socket.io';
-export const io = new Server(httpServer, {
+// The io instance is managed via the singleton in lib/socket.ts to avoid
+// circular imports when route handlers need to call io.emit().
+import { initIO } from './lib/socket';
+export const io = initIO(httpServer, {
   cors: {
     origin: allowedOrigins,
     credentials: true,
