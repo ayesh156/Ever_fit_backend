@@ -12,21 +12,21 @@ async function main() {
   // SEED CATEGORIES
   // ==========================================
   const categoriesData = [
-    { id: 1, name: "Men's Wear" },
-    { id: 2, name: "Women's Wear" },
-    { id: 3, name: "Kids' Wear" },
-    { id: 4, name: 'Footwear' },
-    { id: 5, name: 'Accessories' },
-    { id: 6, name: 'Sportswear' },
-    { id: 7, name: 'Formal Wear' },
-    { id: 8, name: 'Denim' },
-    { id: 9, name: 'Traditional' },
-    { id: 10, name: 'Swimwear' },
-    { id: 11, name: 'Outerwear' },
-    { id: 12, name: 'Ethnic Wear' },
-    { id: 13, name: 'Maternity' },
-    { id: 14, name: 'Plus Size' },
-    { id: 15, name: 'Workwear' },
+    { id: 1, name: "Men's Wear", slug: 'mens-wear', description: "Men's clothing collection", image: null, status: 'active' },
+    { id: 2, name: "Women's Wear", slug: 'womens-wear', description: "Women's fashion collection", image: null, status: 'active' },
+    { id: 3, name: "Kids' Wear", slug: 'kids-wear', description: "Children's clothing", image: null, status: 'active' },
+    { id: 4, name: 'Footwear', slug: 'footwear', description: 'Shoes sandals and boots', image: null, status: 'active' },
+    { id: 5, name: 'Accessories', slug: 'accessories', description: 'Belts bags watches and more', image: null, status: 'active' },
+    { id: 6, name: 'Sportswear', slug: 'sportswear', description: 'Active and athletic wear', image: null, status: 'active' },
+    { id: 7, name: 'Formal Wear', slug: 'formal-wear', description: 'Suits blazers and formal attire', image: null, status: 'active' },
+    { id: 8, name: 'Denim', slug: 'denim', description: 'Jeans jackets and denim wear', image: null, status: 'active' },
+    { id: 9, name: 'Traditional', slug: 'traditional', description: 'Sarees sarongs and cultural wear', image: null, status: 'active' },
+    { id: 10, name: 'Swimwear', slug: 'swimwear', description: 'Beachwear and swim collection', image: null, status: 'active' },
+    { id: 11, name: 'Outerwear', slug: 'outerwear', description: 'Jackets coats and windbreakers', image: null, status: 'active' },
+    { id: 12, name: 'Ethnic Wear', slug: 'ethnic-wear', description: 'Kurtas sherwanis and ethnic collection', image: null, status: 'active' },
+    { id: 13, name: 'Maternity', slug: 'maternity', description: 'Comfortable maternity clothing', image: null, status: 'inactive' },
+    { id: 14, name: 'Plus Size', slug: 'plus-size', description: 'Inclusive plus-size fashion range', image: null, status: 'active' },
+    { id: 15, name: 'Workwear', slug: 'workwear', description: 'Professional office and work attire', image: null, status: 'active' },
   ];
 
   const categoryNameToId: Record<string, number> = {};
@@ -35,7 +35,7 @@ async function main() {
     const created = await prisma.category.upsert({
       where: { id: cat.id },
       update: { name: cat.name },
-      create: { id: cat.id, name: cat.name },
+      create: { id: cat.id, name: cat.name, slug: cat.slug ?? '', description: cat.description ?? '', image: cat.image, status: cat.status ?? 'active' },
     });
     categoryNameToId[cat.name] = created.id;
   }
