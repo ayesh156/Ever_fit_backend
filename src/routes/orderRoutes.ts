@@ -90,10 +90,10 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/orders — Create a new order
+// POST /api/orders — Create a new order (auto-creates/upserts customer by phone)
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { customerName, customerPhone, items, paymentMethod, paidAmount, discount, subtotal, dueDate } = req.body;
+    const { customerName, customerPhone, customerId, items, paymentMethod, paidAmount, discount, subtotal, dueDate } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       res.status(400).json({ error: 'At least one item is required' });
@@ -116,8 +116,33 @@ router.post('/', async (req: Request, res: Response) => {
     const paid = typeof paidAmount === 'number' ? paidAmount : total;
     const status: any = paid > 0 ? 'PAID' : 'PENDING';
 
+    // Auto-create or find customer by phone if customerId not provided
+    let userId: number | null = null;
+    if (customerId) {
+      userId = Number(customerId);
+    } else if (customerPhone && customerPhone.trim() && customerName && customerName !== 'Walk-in Customer') {
+      // Try to find existing customer by phone
+      const existing = await prisma.user.findFirst({
+        where: { phone: customerPhone.trim(), role: 'CUSTOMER' },
+      });
+      if (existing) {
+        userId = existing.id;
+      } else {
+        // Create new customer
+        const newCustomer = await prisma.user.create({
+          data: {
+            name: customerName,
+            phone: customerPhone.trim(),
+            role: 'CUSTOMER',
+          },
+        });
+        userId = newCustomer.id;
+      }
+    }
+
     const order = await prisma.order.create({
       data: {
+        userId,
         customerName: customerName || 'Walk-in Customer',
         customerPhone: customerPhone || null,
         totalAmount: total,

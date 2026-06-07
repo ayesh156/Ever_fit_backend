@@ -79,12 +79,14 @@ import categoryRoutes from './routes/categoryRoutes';
 import settingsRoutes from './routes/settingsRoutes';
 import subscriberRoutes from './routes/subscriberRoutes';
 import orderRoutes from './routes/orderRoutes';
+import customerRoutes from './routes/customerRoutes';
 
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/subscribers', subscriberRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/customers', customerRoutes);
 
 // Socket.IO for real-time updates
 import { Server } from 'socket.io';

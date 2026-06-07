@@ -87,15 +87,35 @@ enum OrderStatus {
 }
 
 model Order {
-  id            Int           @id @default(autoincrement())
-  userId        Int?
-  user          User?         @relation(fields: [userId], references: [id])
-  totalAmount   Float
-  status        OrderStatus   @default(PAID)
-  paymentMethod String?
-  items         OrderItem[]
-  createdAt     DateTime      @default(now())
+  id                Int           @id @default(autoincrement())
+  userId            Int?
+  user              User?         @relation(fields: [userId], references: [id])
+  customerName      String?
+  customerPhone     String?
+  totalAmount       Float
+  subtotal          Float         @default(0)
+  discount          Float         @default(0)
+  paidAmount        Float         @default(0)
+  dueDate           DateTime?
+  status            OrderStatus   @default(PAID)
+  paymentMethod     String?
+  paymentReceiptUrl String?
+  notes             String?       @db.Text
+  items             OrderItem[]
+  payments          OrderPayment[]
+  createdAt         DateTime      @default(now())
   @@map("orders")
+}
+
+model OrderPayment {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  amount    Float
+  method    String
+  reference String?
+  createdAt DateTime @default(now())
+  @@map("order_payments")
 }
 
 model Subscriber {
@@ -113,12 +133,14 @@ model StorefrontSetting {
 }
 
 model OrderItem {
-  id          Int            @id @default(autoincrement())
-  orderId     Int
-  order       Order          @relation(fields: [orderId], references: [id])
-  variantId   Int
-  variant     ProductVariant @relation(fields: [variantId], references: [id])
-  quantity    Int
-  price       Float
+  id        Int            @id @default(autoincrement())
+  orderId   Int
+  order     Order          @relation(fields: [orderId], references: [id])
+  variantId Int
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  quantity  Int
+  unitPrice Float          @default(0)
+  discount  Float          @default(0)
+  price     Float
   @@map("order_items")
 }
