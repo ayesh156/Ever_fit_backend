@@ -78,11 +78,22 @@ import productRoutes from './routes/productRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import settingsRoutes from './routes/settingsRoutes';
 import subscriberRoutes from './routes/subscriberRoutes';
+import orderRoutes from './routes/orderRoutes';
 
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/subscribers', subscriberRoutes);
+app.use('/api/orders', orderRoutes);
+
+// Socket.IO for real-time updates
+import { Server } from 'socket.io';
+export const io = new Server(httpServer, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
+});
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
