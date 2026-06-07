@@ -4,6 +4,8 @@ node_modules
 
 /src/generated/prisma
 
-# Ignore user-uploaded content to avoid repository bloat and security risks
+# Ignore all files inside uploads directory
 public/uploads/**/*
+
+# Always track .gitkeep files so empty folder structures are pushed to GitHub
 !public/uploads/**/.gitkeep
