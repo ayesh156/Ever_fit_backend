@@ -8,6 +8,7 @@ datasource db {
 
 enum Role {
   ADMIN
+  CASHIER
   STAFF
 }
 
@@ -16,7 +17,9 @@ model User {
   name      String
   email     String?  @unique
   phone     String?
+  password  String   @default("")
   role      Role     @default(STAFF)
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   @@map("users")
 }

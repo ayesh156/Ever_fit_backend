@@ -81,6 +81,9 @@ import subscriberRoutes from './routes/subscriberRoutes';
 import orderRoutes from './routes/orderRoutes';
 import customerRoutes from './routes/customerRoutes';
 import cityRoutes from './routes/cityRoutes';
+import reportRoutes from './routes/reportRoutes';
+import dashboardRoutes from './routes/dashboardRoutes';
+import authRoutes from './routes/authRoutes';
 
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -89,6 +92,9 @@ app.use('/api/subscribers', subscriberRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/cities', cityRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/auth', authRoutes);
 
 // Socket.IO for real-time updates
 // The io instance is managed via the singleton in lib/socket.ts to avoid

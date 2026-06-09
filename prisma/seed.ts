@@ -1,5 +1,6 @@
 import { PrismaClient, Role, OrderStatus } from '@prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import bcrypt from 'bcryptjs';
 import 'dotenv/config';
 
 const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
@@ -52,8 +53,10 @@ async function main() {
 
   const categoryNameToId: Record<string, number> = {};
   for (const cat of categoriesData) {
-    const created = await prisma.category.create({
-      data: { name: cat.name, slug: cat.slug, description: cat.description, image: cat.image, status: cat.status },
+    const created = await prisma.category.upsert({
+      where: { name: cat.name },
+      update: { slug: cat.slug, description: cat.description, image: cat.image, status: cat.status },
+      create: { name: cat.name, slug: cat.slug, description: cat.description, image: cat.image, status: cat.status },
     });
     categoryNameToId[cat.name] = created.id;
   }
@@ -193,14 +196,25 @@ async function main() {
   console.log(`Seeded ${orderCount} orders with ${orderItemsTotal} order items`);
 
   // ==========================================
-  // SEED DEFAULT ADMIN USER
+  // SEED DEFAULT ADMIN USERS (with bcrypt hashed passwords)
   // ==========================================
+  const adminPassword = await bcrypt.hash('Ayesh123', 12);
+  await prisma.user.upsert({
+    where: { email: 'ayesh@gmail.com' },
+    update: {},
+    create: { name: 'Ayesh', email: 'ayesh@gmail.com', password: adminPassword, role: Role.ADMIN },
+  });
+  console.log('Seeded admin user (ayesh@gmail.com / Ayesh123)');
+
+  // Also seed a fallback admin for testing
+  const fallbackPassword = await bcrypt.hash('admin123', 12);
   await prisma.user.upsert({
     where: { email: 'admin@everfit.com' },
     update: {},
-    create: { name: 'Admin', email: 'admin@everfit.com', role: Role.ADMIN },
+    create: { name: 'Admin', email: 'admin@everfit.com', password: fallbackPassword, role: Role.ADMIN },
   });
-  console.log('Seeded admin user');
+  console.log('Seeded fallback admin user (admin@everfit.com / admin123)');
+
   console.log('Database seeding completed successfully!');
 }
 
