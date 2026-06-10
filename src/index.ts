@@ -73,6 +73,36 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'EverFit API is running' });
 });
 
+// Test status page (HTML UI for server health check)
+app.get('/test', (_req, res) => {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server Status | Ever Fit</title>
+  <style>
+    body { margin: 0; padding: 0; background-color: #09090b; color: #f4f4f5; font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .card { background-color: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .status-dot { display: inline-block; width: 12px; height: 12px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; margin-right: 8px; }
+    h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+    p { color: #a1a1aa; font-size: 14px; margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1><span class="status-dot"></span> Ever Fit Backend Server is LIVE</h1>
+    <p>The Node.js Express server is running successfully.</p>
+    <br/>
+    <p><strong>Environment:</strong> ${process.env.NODE_ENV || 'development'}</p>
+    <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+    <p><strong>Uptime:</strong> ${Math.floor(process.uptime())} seconds</p>
+  </div>
+</body>
+</html>`;
+  res.send(html);
+});
+
 // Routes
 import productRoutes from './routes/productRoutes';
 import categoryRoutes from './routes/categoryRoutes';
